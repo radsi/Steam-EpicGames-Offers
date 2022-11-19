@@ -7,6 +7,7 @@ let freeEpicGames = {};
 
 async function getDiscountGames(){
     var gamesInfo = await axios.get("http://store.steampowered.com/api/featuredcategories/?l=spanish");
+    var isFree;
     gamesInfo.data.specials.items.forEach(game => {
         if(game.final_price < game.original_price){
             discountSteamGames[game.name] = {image: game.large_capsule_image, price: game.final_price, game_url: `https://store.steampowered.com/app/${game.id}`};
@@ -14,17 +15,24 @@ async function getDiscountGames(){
     });
 
     gamesInfo = await axios.get("https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions");
+
+
+
     gamesInfo.data.data.Catalog.searchStore.elements.forEach(game =>{
-        if(game.price.totalPrice.discountPrice == 0){
-            var gameNameURL;
-            game.customAttributes.forEach(x => {
-                if(x.key == "com.epicgames.app.productSlug"){
-                    gameNameURL = x.value;
-                }
-            });
-            freeEpicGames[game.title] = {image: game.keyImages[2].url, game_url: `https://store.epicgames.com/es-ES/p/${gameNameURL}`}
-        }
+        game.categories.forEach(x => {
+            if(x.path == "freegames"){
+                var gameNameURL;
+                game.customAttributes.forEach(catt => {
+                    if(catt.key == "com.epicgames.app.productSlug"){
+                        gameNameURL = x.value;
+                    }
+                });
+                freeEpicGames[game.title] = {image: game.keyImages[2].url, game_url: `https://store.epicgames.com/es-ES/p/${gameNameURL}`}
+            }
+        });
     });
+
+    
 }
 
 app.listen(4488, ()=>{
